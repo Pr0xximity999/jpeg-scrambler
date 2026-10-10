@@ -10,4 +10,4 @@ I got inspired by this idea after syncthing paused mid-image and it turned into 
 - [ ] Switch out file writing to editing byte arrays directly
 - [ ] Make the UI not shit
 - [ ] Make the slice size editable
-
+- [ ] Add the ability to target other file sections
