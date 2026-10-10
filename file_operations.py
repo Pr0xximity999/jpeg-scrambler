@@ -16,7 +16,6 @@ def transfer_file(source_path:str, dest_path:str, parts_num:int, delay_s:int=0):
     with open(source_path, "rb") as source, open(dest_path, 'wb') as dest:
         # Write first chunk
         dest.write(source.read(part_size))
-        print(part_size)
 
         # Write last chunk
         source.seek(file_size - part_size)
