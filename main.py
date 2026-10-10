@@ -1,25 +1,51 @@
-import os, time
+from file_operations import transfer_file
+import tkinter as tk
+from PIL import ImageTk, Image, ImageOps
+from tkinter import Button, Label
+import crossfiledialog
 
-source_path = "./image.jpg"
-dest_path = "./new_image.jpg"
-chunk = 500
+# Init window
+window = tk.Tk()
+window.attributes("-type", "utility")
 
-size = os.path.getsize(source_path)
-with open(source_path, "rb") as source, open(dest_path, 'wb') as dest:
-    # Write first chunk
-    dest.write(source.read(chunk))
+# Init image label
+img_label = Label()
+img_label.pack()
 
-    # Write last chunk
-    dest.seek(size - chunk)
-    dest.seek(size - chunk)
-    dest.write(source.read())
+# Set functions
+def load_file():
+    source_path = crossfiledialog.open_file(filter=["*.jpg", "*.JPG"])
+    print(source_path)
+    dest_path = "new_image.jpg"
+    parts = 8
 
-    # Write the middle
-    source.seek(chunk)
-    dest.seek(chunk)
-    while True:
-        part = source.read(chunk)
-        if not part:
-            break
-        dest.write(part)
-        time.sleep(1)
+    transfer_file(source_path, dest_path, parts, 0)
+
+    # load image
+    img = Image.open(dest_path)
+    try:
+        img = ImageOps.exif_transpose(img)
+    except:
+        pass
+    img = img.resize((300, 400))
+
+    imgTK = ImageTk.PhotoImage(img)
+    img_label.configure(image=imgTK)
+    img_label.pack()
+
+
+# Set geometry
+width = 500
+height = 500
+posx = int((window.winfo_screenwidth() / 2) - width / 2)
+posy = int((window.winfo_screenheight() / 2) - height / 2)
+
+window.geometry(f"{width}x{height}+{posx}+{posy}")
+
+# Load image button
+img_btn = Button(window, text="Load image", command=load_file)
+img_btn.pack()
+
+
+
+window.mainloop()
