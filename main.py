@@ -1,15 +1,18 @@
-from file_operations import scramble_image, find_SOS_segment
+import image_operations
 import tkinter as tk
 from PIL import ImageTk, Image, ImageOps
 import crossfiledialog
+
+import image_operations
 
 # Init window
 window = tk.Tk()
 window.attributes("-type", "utility")
 
+# Init file operator
+imageOp = image_operations.ImageOperator("temp_img.jpg")
+
 # Init variables
-source_path= ""
-dest_path = "new_image.jpg"
 lock_first_part = tk.IntVar()
 lock_last_part = tk.IntVar()
 lock_first_byte = tk.IntVar()
@@ -17,20 +20,15 @@ lock_last_byte = tk.IntVar()
 
 # Init image label
 img_label = tk.Label()
-    
 
 # Set functions
 def load_file():
-    global source_path
-    source_path = crossfiledialog.open_file(filter=["*.jpg", "*.JPG"])
+    imageOp.source_image = crossfiledialog.open_file(filter=["*.jpg", "*.JPG"])
     update_image_data()
-    
-
 
 def update_image_data(event=None):
     print("-------------------------")
-    global source_path, dest_path, parts
-    scramble_image(source_path, dest_path, 
+    imageOp.scramble_image(
                     int(parts_slider.get()), 
                     delay_s=0, 
                     start_part_locked=bool(lock_first_part.get()), end_part_locked=bool(lock_last_part.get()),
@@ -39,8 +37,7 @@ def update_image_data(event=None):
 
 
 def update_image_element():
-    global dest_path
-    img = Image.open(dest_path)
+    img = Image.open(imageOp.source_image)
     try:
         img = ImageOps.exif_transpose(img)
     except:
