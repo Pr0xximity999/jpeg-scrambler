@@ -51,21 +51,32 @@ def find_SOS_segment(file_path):
         return offset_sos, size_sos_marker, offset_eoi
 
 
-def scramble_image(source_path:str, dest_path:str, parts_num:int, delay_s:int=0, end_locked:bool=False):
+def scramble_image(source_path:str, dest_path:str, 
+                    parts_num:int, 
+                    delay_s:int=0,
+                    start_part_locked:bool=False, end_part_locked:bool=False,
+                    start_byte_locked:bool=False, end_byte_locked:bool=False):
     # Find the start of the SOS data
     data = find_SOS_segment(source_path)
 
     if not data:
         raise ValueError("No SOS data found in JPEG")
 
+    # The silly parse
+    start_byte_locked = int(start_byte_locked)
+    end_byte_locked = int(end_byte_locked )
+
     # Calculate image data values
     offset_sos, size_sos_marker, offset_eoi = data
+    offset_sos += start_byte_locked
     offset_sos_true = offset_sos + size_sos_marker + 2 #2 for the marker size
-    size_sos = offset_eoi - offset_sos_true
+    size_sos = offset_eoi - offset_sos_true - end_byte_locked
 
-    print(f"Found sos marker at {hex(offset_sos)} with size {size_sos_marker}")
-    print(f"eoi marker found at {hex(offset_eoi)} making the total sos section the size of {size_sos} bytes")
-    print(f"non sos data starts at offset {hex(offset_sos_true)} and has the size of {size_sos} bytes")
+    print(f"READ: Found sos marker at {hex(offset_sos)} with size {size_sos_marker}")
+    print(f"READ: eoi marker found at {hex(offset_eoi)} making the total sos section the size of {size_sos} bytes")
+    print(f"READ: non sos data starts at offset {hex(offset_sos_true)} and has the size of {size_sos} bytes")
+
+    print(f"READ: Left offset override: +{start_byte_locked}, Right offset override: -{end_byte_locked}")
 
     # Calculate the number and order of the file parts
     part_size = math.ceil(size_sos / parts_num)
@@ -75,22 +86,27 @@ def scramble_image(source_path:str, dest_path:str, parts_num:int, delay_s:int=0,
     positions = list(range(0, parts_num))
     random.shuffle(positions)
 
-    # Lock the position of the last slice to the first spot by swapping value 0 with whats on index 0
-    # This guarantees the entire image renders correctly
-    if(end_locked):
-        index_first_part = positions.index(len(positions) - 1) # 0 is the value i'm looking for, not the index (thats what im trying to find)
+    # Lock the position of the first or last slice to their actual spot by swapping the index of their randomized value with their proper one
+    # This guarantees the entire image renders correctly, unless the start and end offsets are used
+    if(start_part_locked):
+        index_first_part = positions.index(0) # 0 is the value i'm looking for, not the index (thats what im trying to find)
+        positions[index_first_part] = positions[0]
+        positions[0] = 0
+
+    if(end_part_locked):
+        index_first_part = positions.index(len(positions) - 1)
         positions[index_first_part] = positions[-1]
         positions[-1] = len(positions) - 1
 
     # Write chunks
     with open(source_path, "rb") as source, open(dest_path, 'wb') as dest:
         # Write everything before the sensor data
-        dest.write(source.read(offset_sos_true - 1 + 32 * 8)) # -1 because it is before the SOS data address
+        dest.write(source.read(offset_sos_true - 1)) # -1 because it is before the SOS data address
 
         # Write the End Of Image section
-        source.seek(offset_eoi)
+        source.seek(offset_eoi - end_byte_locked)
         dest.seek(source.tell())
-        dest.write(source.read(2)) # EOI is 2 bytes
+        dest.write(source.read(2 + end_byte_locked)) # EOI is 2 bytes, override is added
 
 
         # Write in between, randomly
@@ -102,7 +118,7 @@ def scramble_image(source_path:str, dest_path:str, parts_num:int, delay_s:int=0,
             dest.seek(offset_new)
 
             dest.write(source.read(part_size))
-            print(f"Writing part {part}({hex(offset_old)}) to position {position}({hex(offset_new)})")
+            print(f"WRITE: Writing part {part}({hex(offset_old)}) to position {position}({hex(offset_new)})")
             time.sleep(delay_s)
         
-        print("Finished writing all parts")
+        print("WRITE: Finished writing all parts")

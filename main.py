@@ -11,6 +11,9 @@ window.attributes("-type", "utility")
 source_path= ""
 dest_path = "new_image.jpg"
 lock_first_part = tk.IntVar()
+lock_last_part = tk.IntVar()
+lock_first_byte = tk.IntVar()
+lock_last_byte = tk.IntVar()
 
 # Init image label
 img_label = tk.Label()
@@ -20,23 +23,28 @@ img_label = tk.Label()
 def load_file():
     global source_path
     source_path = crossfiledialog.open_file(filter=["*.jpg", "*.JPG"])
-    transform_file()
+    update_image_data()
     
 
 
-def transform_file(event=None):
+def update_image_data(event=None):
+    print("-------------------------")
     global source_path, dest_path, parts
-    scramble_image(source_path, dest_path, int(parts_slider.get()), delay_s=0, start_locked=bool(lock_first_part.get()))
-    update_image()
+    scramble_image(source_path, dest_path, 
+                    int(parts_slider.get()), 
+                    delay_s=0, 
+                    start_part_locked=bool(lock_first_part.get()), end_part_locked=bool(lock_last_part.get()),
+                    start_byte_locked=bool(lock_first_byte.get()), end_byte_locked=bool(lock_last_byte.get()))
+    update_image_element()
 
 
-def update_image():
+def update_image_element():
     global dest_path
     img = Image.open(dest_path)
     try:
         img = ImageOps.exif_transpose(img)
     except:
-        print("ERROR: Failed to interact with EXIF data")
+        print("DISPLAY ERROR: Failed to interact with EXIF data")
     img = img.resize((300, 400))
 
     imgTK = ImageTk.PhotoImage(img)
@@ -54,20 +62,28 @@ window.geometry(f"{width}x{height}+{posx}+{posy}")
 
 # Open Image and Re-Scramble image buttons
 img_btn = tk.Button(window, text="Load image", command=load_file)
-reload_button = tk.Button(window, text="Re-Scramble image", command=transform_file)
+reload_button = tk.Button(window, text="Re-Scramble image", command=update_image_data)
 
 # Parts Slider
-parts_slider = tk.Scale(window, from_=1,to=16, orient="horizontal", command=transform_file)
+parts_slider = tk.Scale(window, from_=1,to=16, orient="horizontal", command=update_image_data)
 
-# Lock last part checkbox
-lock_checkbox = tk.Checkbutton(window, text="Lock last segment", variable=lock_first_part, command=transform_file)
+# ock first and last byte checkboxes
+lock_first_byte_checkbox = tk.Checkbutton(window, text="Lock first byte", variable=lock_first_byte, command=update_image_data)
+lock_last_byte_checkbox = tk.Checkbutton(window, text="Lock last byte", variable=lock_last_byte, command=update_image_data)
+
+# Lock first and last part checkboxes
+lock_first_part_checkbox = tk.Checkbutton(window, text="Lock first segment", variable=lock_first_part, command=update_image_data)
+lock_last_part_checkbox = tk.Checkbutton(window, text="Lock last segment", variable=lock_last_part, command=update_image_data)
 
 # Position elements
 img_btn.pack()
 reload_button.pack()
 img_label.pack()
 parts_slider.pack()
-lock_checkbox.pack()
+lock_first_part_checkbox.pack()
+lock_first_byte_checkbox.pack()
+lock_last_part_checkbox.pack()
+lock_last_byte_checkbox.pack()
 
 # Start main event loop
 window.mainloop()
