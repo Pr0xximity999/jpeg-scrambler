@@ -1,5 +1,7 @@
 new_imgage.jpg
 *.jpg
+*.JPG
+*.JPEG
 *.png
 
 __pycache__/
