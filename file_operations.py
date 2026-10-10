@@ -8,8 +8,8 @@ def transfer_file(source_path:str, dest_path:str, parts_num:int, delay_s:int=0):
 
     # Generate list of parts and positions
     # end is exclusive, but the last part is written separately
-    parts = list(range(2, parts_num))
-    positions = list(range(2, parts_num))
+    parts = list(range(2, parts_num - 1))
+    positions = list(range(2, parts_num - 1))
     random.shuffle(positions)
 
     # Transfer chunks
