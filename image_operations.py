@@ -5,7 +5,7 @@ import os, time, math, random
 class ImageOperator:
     def __init__(self, temp_file_name:str, cahce_folder:str="cache"):
         self.cache_folder = cahce_folder
-        self.file_temp_location = cahce_folder + temp_file_name
+        self.target_image_temp_location = cahce_folder + "/" + temp_file_name
 
     def set_source_image(self, file_path:str):
         self.source_image = file_path
@@ -117,7 +117,7 @@ class ImageOperator:
             os.mkdir(self.cache_folder)
 
         # Write chunks
-        with open(self.source_image, "rb") as source, open(self.file_temp_location, 'wb') as dest:
+        with open(self.source_image, "rb") as source, open(self.target_image_temp_location, 'wb') as dest:
             # Write everything before the sensor data
             dest.write(source.read(offset_sos_true - 1)) # -1 because it is before the SOS data address
 

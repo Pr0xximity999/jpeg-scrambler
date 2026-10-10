@@ -37,7 +37,7 @@ def update_image_data(event=None):
 
 
 def update_image_element():
-    img = Image.open(imageOp.source_image)
+    img = Image.open(imageOp.target_image_temp_location)
     try:
         img = ImageOps.exif_transpose(img)
     except:
