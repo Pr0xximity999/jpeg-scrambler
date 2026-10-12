@@ -6,3 +6,6 @@ new_imgage.jpg
 
 __pycache__/
 file-chunks/
+
+.vscode/
+.pics
